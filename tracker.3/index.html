@@ -1,0 +1,107 @@
+                            <!DOCTYPE html>
+                            <html lang="en">
+                            <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Amazon-Themed Time Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="overlay"></div>
+
+  <div class="container">
+    <h1>⏱️ Personal Time Tracker</h1>
+
+    <div class="time-info">
+      <p><strong>Used This Week:</strong> <span id="used-time">00:00</span></p>
+      <p><strong>Remaining:</strong> <span id="remaining-time">20:00</span></p>
+    </div>
+
+    <div class="buttons">
+      <button onclick="startSession()">Start</button>
+      <button onclick="stopSession()">Stop</button>
+      <button onclick="resetTime()">Reset</button>
+      <button onclick="checkStatus()">Check Status</button>
+    </div>
+  </div>
+
+  <script>
+    let startTime = null;
+    let usedTime = 0;
+    let timerInterval = null;
+
+    function loadTime() {
+      const savedTime = localStorage.getItem('usedTime');
+      return savedTime ? parseInt(savedTime, 10) : 0;
+    }
+
+    function saveTime(time) {
+      localStorage.setItem('usedTime', time);
+    }
+
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+
+    function startSession() {
+      if (startTime !== null) {
+        alert("Session already started!");
+        return;
+      }
+      startTime = new Date();
+      timerInterval = setInterval(updateUI, 1000);
+      alert("Session started!");
+    }
+
+    function stopSession() {
+      if (startTime === null) {
+        alert("Session not started yet.");
+        return;
+      }
+      const now = new Date();
+      const diffInSeconds = Math.floor((now - startTime) / 1000);
+      usedTime += diffInSeconds;
+      startTime = null;
+      clearInterval(timerInterval);
+      saveTime(usedTime);
+      updateUI();
+      alert(`Session stopped. Logged ${formatTime(diffInSeconds)} (MM:SS).`);
+    }
+
+    function resetTime() {
+      usedTime = 0;
+      startTime = null;
+      clearInterval(timerInterval);
+      saveTime(usedTime);
+      updateUI();
+      alert("Time reset.");
+    }
+
+    function checkStatus() {
+      updateUI();
+      alert(`Used: ${formatTime(usedTime)}\nRemaining: ${formatTime(Math.max(0, 1200 - usedTime))}`);
+    }
+
+    function updateUI() {
+      const remaining = Math.max(0, 1200 - usedTime);
+
+      if (startTime !== null) {
+        const now = new Date();
+        const elapsedSeconds = Math.floor((now - startTime) / 1000);
+        document.getElementById('used-time').textContent = formatTime(usedTime + elapsedSeconds);
+        document.getElementById('remaining-time').textContent = formatTime(Math.max(0, 1200 - (usedTime + elapsedSeconds)));
+      } else {
+        document.getElementById('used-time').textContent = formatTime(usedTime);
+        document.getElementById('remaining-time').textContent = formatTime(remaining);
+      }
+    }
+
+    window.onload = function () {
+      usedTime = loadTime();
+      updateUI();
+    };
+  </script>
+</body>
+</html>
